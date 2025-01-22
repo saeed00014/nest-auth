@@ -1,10 +1,10 @@
 import { IsString, Validate } from 'class-validator';
 import { CustomStringBooleaOrEmpty } from 'src/customValidator/customValidator';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-Entity();
+@Entity()
 export class User {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @IsString()
