@@ -4,36 +4,42 @@ import { UsersModule } from './users/users.module';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/entity/user.entity';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CustomExceptionFilter } from './exceptionFIlter/exceptionFilter';
 import { APP_FILTER } from '@nestjs/core';
+import { TypeORMErrorFilter } from './exceptionFIlter/typeORMErrorFilter';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    UsersModule,
-    ConfigModule.forRoot(),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (ConfigService: ConfigService) => ({
-        type: 'mysql',
-        host: ConfigService.get('DATABASE_HOST'),
-        port: ConfigService.get('DATABASE_PORT'),
-        username: ConfigService.get('DATABASE_USERNAME'),
-        password: ConfigService.get('DATABASE_PASSWORD'),
-        database: ConfigService.get('DATABASE_NAME'),
-        entities: [User],
-        logging: true,
-        synchronize: true,
-      }),
-      inject: [ConfigService],
+    ConfigModule.forRoot({ isGlobal: true }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET || 'no',
+      signOptions: {
+        expiresIn: '10h',
+      },
     }),
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: '',
+      database: 'nest-auth',
+      entities: [User],
+      logging: true,
+      synchronize: true,
+    }),
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_FILTER,
-      useClass: CustomExceptionFilter,
+      useClass: TypeORMErrorFilter,
     },
   ],
 })

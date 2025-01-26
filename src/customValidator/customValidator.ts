@@ -3,8 +3,10 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 
-@ValidatorConstraint({ name: 'customStringBooleanOrEmpty', async: false })
-export class CustomStringBooleaOrEmpty implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: 'customBooleanStringOrEmpty', async: false })
+export class CustomBooleanStringOrEmpty
+  implements ValidatorConstraintInterface
+{
   validate(value: any) {
     if (
       value !== undefined &&
@@ -18,6 +20,6 @@ export class CustomStringBooleaOrEmpty implements ValidatorConstraintInterface {
   }
 
   defaultMessage() {
-    return 'the isActive field must be not given or boolean';
+    return 'the isActive field must be not-given or boolean';
   }
 }
