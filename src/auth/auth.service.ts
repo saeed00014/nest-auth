@@ -63,31 +63,73 @@ export class AuthService {
     );
   }
 
-  async passwordRules(rules: PasswordRules[]) {
+  async createPasswordRules(rules: PasswordRules[]) {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      queryRunner.manager.clear(PasswordRules);
-
-      const savedRulesResult = Promise.all(
-        rules.map((rule) => {
+      const results = await Promise.all(
+        rules.map(async (rule) => {
           if (PasswordRuleNames[rule.name]) {
-            queryRunner.manager.save(PasswordRules, rule);
+            return await queryRunner.manager.save(PasswordRules, rule);
           }
-          throw new HttpException(
-            `your request body is not valid`,
-            HttpStatus.BAD_REQUEST,
-          );
         }),
       );
-      await queryRunner.commitTransaction();
 
-      return savedRulesResult;
+      if (results.filter((d) => d).length !== rules.length) {
+        throw new HttpException('bad request', HttpStatus.BAD_REQUEST);
+      }
+
+      await queryRunner.commitTransaction();
+      return results;
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      throw e;
+      if (e instanceof HttpException) {
+        throw e;
+      }
+      throw new HttpException(
+        'unexpected error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  async updatePasswordRules(rules: PasswordRules[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const results = await Promise.all(
+        rules.map(async (rule) => {
+          if (PasswordRuleNames[rule.name]) {
+            const foundedRule = await queryRunner.manager.findOneBy(
+              PasswordRules,
+              { name: rule.name },
+            );
+            foundedRule.value = rule.value;
+            return await queryRunner.manager.save(PasswordRules, foundedRule);
+          }
+        }),
+      );
+
+      if (results.filter((d) => d).length !== rules.length) {
+        throw new HttpException('bad request', HttpStatus.BAD_REQUEST);
+      }
+
+      await queryRunner.commitTransaction();
+      return results;
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      if (e instanceof HttpException) {
+        throw e;
+      }
+      throw new HttpException(
+        'unexpected error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     } finally {
       await queryRunner.release();
     }
