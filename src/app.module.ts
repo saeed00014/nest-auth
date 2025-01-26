@@ -9,6 +9,7 @@ import { TypeORMErrorFilter } from './exceptionFIlter/typeORMErrorFilter';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { PasswordRules } from './auth/entity/passwordRules.entity';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { AuthModule } from './auth/auth.module';
       username: 'root',
       password: '',
       database: 'nest-auth',
-      entities: [User],
+      entities: [User, PasswordRules],
       logging: true,
       synchronize: true,
     }),

@@ -1,17 +1,23 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUser, User, userCredential } from 'src/users/entity/user.entity';
+import { ConfigService } from '@nestjs/config';
 
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUser, User, userCredential } from 'src/users/entity/user.entity';
+import { PasswordRules } from './entity/passwordRules.entity';
+import { PasswordRuleNames } from './enums/passwordRulesName';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private dataSource: DataSource,
     @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(PasswordRules)
+    private passwordRulesRepository: Repository<PasswordRules>,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
@@ -55,6 +61,36 @@ export class AuthService {
       'username or password is wrong',
       HttpStatus.UNAUTHORIZED,
     );
+  }
+
+  async passwordRules(rules: PasswordRules[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      queryRunner.manager.clear(PasswordRules);
+
+      const savedRulesResult = Promise.all(
+        rules.map((rule) => {
+          if (PasswordRuleNames[rule.name]) {
+            queryRunner.manager.save(PasswordRules, rule);
+          }
+          throw new HttpException(
+            `your request body is not valid`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }),
+      );
+      await queryRunner.commitTransaction();
+
+      return savedRulesResult;
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      throw e;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getHashedPassword(password: string) {

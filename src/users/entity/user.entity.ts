@@ -2,7 +2,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { IsString, Validate } from 'class-validator';
 import { CustomBooleanStringOrEmpty } from 'src/customValidator/customValidator';
-import { Exclude } from 'class-transformer';
 
 import { OmitType, PickType } from '@nestjs/mapped-types';
 
