@@ -4,6 +4,7 @@ import { IsString, Validate } from 'class-validator';
 import { CustomBooleanStringOrEmpty } from 'src/customValidator/customValidator';
 
 import { OmitType, PickType } from '@nestjs/mapped-types';
+import { passwordValidator } from 'src/users/entity/passwordValidator';
 
 @Entity()
 export class User {
@@ -18,7 +19,6 @@ export class User {
   @Column({ nullable: false, default: true })
   isActive: boolean;
 
-  @IsString()
   @Column({ nullable: false })
   password: string;
 }
@@ -33,7 +33,12 @@ export class CreateUser extends PickType(User, [
   'password',
 ] as const) {}
 
-export class userCredential extends PickType(User, [
-  'username',
-  'password',
-] as const) {}
+export class userCredential {
+  @IsString()
+  @Column({ nullable: false, unique: true })
+  username: string;
+
+  @Validate(passwordValidator)
+  @Column({ nullable: false })
+  password: string;
+}

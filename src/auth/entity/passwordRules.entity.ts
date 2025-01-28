@@ -1,25 +1,28 @@
-import { IsDate, IsNumberString, IsString } from 'class-validator';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { IsBoolean, IsNumber } from 'class-validator';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class PasswordRules {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn({ default: 1 })
   id: number;
 
-  @IsString()
-  @Column({ unique: true })
-  name: string;
-
-  @IsNumberString()
+  @IsNumber()
   @Column()
-  value: number;
+  maxLength: number;
 
-  @IsDate()
-  @CreateDateColumn()
-  updatedAt: Date;
+  @IsNumber()
+  @Column()
+  minLength: number;
+
+  @IsBoolean()
+  @Column()
+  hasNumber: boolean;
+
+  @IsBoolean()
+  @Column()
+  hasUpperCase: boolean;
+
+  @IsBoolean()
+  @Column()
+  hasSpecialChars: boolean;
 }

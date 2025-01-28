@@ -3,35 +3,24 @@ import { AppController } from './app.controller';
 import { UsersModule } from './users/users.module';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './users/entity/user.entity';
 import { APP_FILTER } from '@nestjs/core';
 import { TypeORMErrorFilter } from './exceptionFIlter/typeORMErrorFilter';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { PasswordRules } from './auth/entity/passwordRules.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { typeOrmConfig } from './config/typeOrmConfig';
+import { mongodbConfig } from './config/mongodbConfig';
+import { jwtConfig } from './config/jwtConfig';
+import { configModuleConfig } from './config/configModuleConfig';
+import { passwordValidator } from './users/entity/passwordValidator';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET || 'no',
-      signOptions: {
-        expiresIn: '10h',
-      },
-    }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'nest-auth',
-      entities: [User, PasswordRules],
-      logging: true,
-      synchronize: true,
-    }),
+    ConfigModule.forRoot(configModuleConfig),
+    JwtModule.registerAsync(jwtConfig),
+    TypeOrmModule.forRootAsync(typeOrmConfig),
+    MongooseModule.forRootAsync(mongodbConfig),
     AuthModule,
     UsersModule,
   ],
